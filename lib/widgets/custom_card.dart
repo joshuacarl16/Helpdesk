@@ -148,9 +148,9 @@ class TopicCard extends StatelessWidget {
                           child: GestureDetector(
                             onTap: () {
                               if (currentUser.userId == topic.userId) {
-                                context
-                                    .read<TopicProvider>()
-                                    .toggleHelpstatus(topic);
+                                // context
+                                //     .read<TopicProvider>()
+                                //     .toggleHelpstatus(topic);
                               }
                             },
                             child: topic.helpStatus

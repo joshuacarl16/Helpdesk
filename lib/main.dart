@@ -71,8 +71,8 @@ class _HomePageState extends State<HomePage>
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Help Desk',
+        title: Text(
+          'Welcome ${widget.username}',
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,

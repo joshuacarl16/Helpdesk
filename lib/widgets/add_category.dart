@@ -82,7 +82,7 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
 
                 if (name.isNotEmpty) {
                   final category = Category(
-                    name: name,
+                    categoryName: name,
                     id: null,
                   );
                   context.read<CategoryProvider>().add(category);

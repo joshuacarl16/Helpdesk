@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/topic.dart';
 import '../provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 Future<dynamic> displayAddTopicDialog(BuildContext context) async {
   return showDialog(
@@ -14,7 +17,7 @@ Future<dynamic> displayAddTopicDialog(BuildContext context) async {
 }
 
 class AddTopicDialog extends StatefulWidget {
-  const AddTopicDialog({super.key});
+  const AddTopicDialog({Key? key}) : super(key: key);
 
   @override
   State<AddTopicDialog> createState() => _AddTopicDialogState();
@@ -35,9 +38,9 @@ class _AddTopicDialogState extends State<AddTopicDialog> {
 
   @override
   void dispose() {
-    _topicNameController = TextEditingController();
-    _topicContentController = TextEditingController();
-    _topicCategoryController = TextEditingController();
+    _topicNameController.dispose();
+    _topicContentController.dispose();
+    _topicCategoryController.dispose();
     super.dispose();
   }
 
@@ -100,20 +103,21 @@ class _AddTopicDialogState extends State<AddTopicDialog> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
               ),
-              onPressed: () {
+              onPressed: () async {
                 final topicName = _topicNameController.text;
                 final topicContent = _topicContentController.text;
                 final topicCategoryName = _topicCategoryController.text;
-                String topicId = '';
 
-                for (int i = 0; i < cProvider.categoryList.length; i++) {
-                  if (_topicCategoryController.text ==
-                      cProvider.categoryList[i].name) {
-                    final categoryId = cProvider.categoryList[i].id;
-                    topicId = categoryId != null ? categoryId.toString() : '';
-                    break;
-                  }
-                }
+                // String topicId = '';
+
+                // for (int i = 0; i < cProvider.categoryList.length; i++) {
+                //   if (_topicCategoryController.text ==
+                //       cProvider.categoryList[i].name) {
+                //     final categoryId = cProvider.categoryList[i].id;
+                //     topicId = categoryId != null ? categoryId.toString() : '';
+                //     break;
+                //   }
+                // }
 
                 if (topicName.isNotEmpty) {
                   final topic = Topic(
@@ -122,9 +126,25 @@ class _AddTopicDialogState extends State<AddTopicDialog> {
                     userId: currentUser.userId,
                     content: topicContent,
                     dateCreated: DateTime.now(),
+                    numberOfComments: null,
                   );
-                  context.read<TopicProvider>().add(topic);
-                  Navigator.of(context).pop();
+
+                  final response = await http.post(
+                    Uri.parse('http://127.0.0.1:8000/add_topic/'),
+                    body: json.encode(topic.toJson()),
+                    headers: {'Content-Type': 'application/json'},
+                  );
+                  print('Response status code: ${response.statusCode}');
+                  print('Response body: ${response.body}');
+                  if (response.statusCode == 201) {
+                    // Topic saved successfully
+                    final jsonData = json.decode(response.body);
+                    final newTopic = Topic.fromJson(jsonData);
+                    context.read<TopicProvider>().add(newTopic);
+                    Navigator.of(context).pop();
+                  } else {
+                    throw Exception('Failed to save topic');
+                  }
                 }
               },
               child: const Text('Save'),

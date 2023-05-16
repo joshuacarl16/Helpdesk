@@ -1,10 +1,4 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
-import 'package:helpdesk_ipt/httpreqs/api_service.dart';
-import 'package:http/src/response.dart';
-
-import '../httpreqs/category_service.dart';
 import '../models/category.dart';
 import '../models/comment.dart';
 import '../models/reply.dart';
@@ -38,31 +32,11 @@ class UserProvider extends ChangeNotifier {
 }
 
 class CategoryProvider extends ChangeNotifier {
-  final CategoryService _categoryService = CategoryService();
   final List<Category> _categoryList = [];
   bool activeCategory = false;
   late Category _currentCategory;
   Category get currentCategory => _currentCategory;
   List<Category> get categoryList => _categoryList;
-
-  Future<void> fetchCategories() async {
-    try {
-      final http.Response response = await _categoryService.fetchCategories();
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        final List<Category> fetchedCategories = data
-            .map((categoryJson) => Category.fromJson(categoryJson))
-            .toList();
-        _categoryList.clear();
-        _categoryList.addAll(fetchedCategories);
-        notifyListeners();
-      } else {
-        print('API Request failed with status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
 
   void add(Category category) {
     _categoryList.add(category);
@@ -96,11 +70,11 @@ class TopicProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool toggleHelpstatus(Topic topic) {
-    topic.helpStatus = !topic.helpStatus;
-    notifyListeners();
-    return topic.helpStatus;
-  }
+  // bool toggleHelpstatus(Topic topic) {
+  //   topic.helpStatus = !topic.helpStatus;
+  //   notifyListeners();
+  //   return topic.helpStatus;
+  // }
 
   void remove(Topic topic) {
     _topicList.remove(topic);

@@ -1,21 +1,47 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:helpdesk_ipt/models/topic.dart';
 import 'package:helpdesk_ipt/provider/provider.dart';
 import 'package:provider/provider.dart';
-
+import 'package:http/http.dart' as http;
 import 'custom_card.dart';
 
-class TopicListWidget extends StatelessWidget {
-  const TopicListWidget({super.key});
+class TopicListWidget extends StatefulWidget {
+  const TopicListWidget({Key? key}) : super(key: key);
+
+  @override
+  _TopicListWidgetState createState() => _TopicListWidgetState();
+}
+
+class _TopicListWidgetState extends State<TopicListWidget> {
+  List<Topic> topics = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTopics();
+  }
+
+  Future<void> fetchTopics() async {
+    final response = await http.get(Uri.parse('http://127.0.0.1:8000/topics/'));
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      final List<dynamic> topicData = jsonData['topics'];
+
+      setState(() {
+        topics =
+            topicData.map((topicJson) => Topic.fromJson(topicJson)).toList();
+      });
+    } else {
+      throw Exception('Failed to fetch topics');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final cProvider = context.watch<CategoryProvider>();
-    final provider = context.watch<TopicProvider>();
-    final topicList = cProvider.activeCategory
-        ? provider.topicList
-            .where((e) => cProvider.currentCategory.name == e.categoryName)
-            .toList()
-        : provider.topicList;
+    final topicList = topics;
 
     return topicList.isEmpty
         ? const Center(
