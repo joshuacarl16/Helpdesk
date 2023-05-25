@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:helpdesk_ipt/provider/provider.dart';
+import 'package:helpdesk_ipt/signup_page.dart';
 import 'package:helpdesk_ipt/widgets/add_category.dart';
 import 'package:helpdesk_ipt/widgets/add_topic.dart';
 import 'package:helpdesk_ipt/widgets/category_list.dart';
@@ -275,15 +276,25 @@ class _LoginFormState extends State<LoginForm> {
               // register
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
+                children: [
                   Text('Not registered?',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       )),
-                  Text(' Sign up now',
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => RegisterPage()),
+                      );
+                    },
+                    child: Text(
+                      ' Sign up now',
                       style: TextStyle(
-                          color: Colors.blue, fontWeight: FontWeight.bold)),
+                          color: Colors.blue, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
               ),
               if (_errorMessage.isNotEmpty)

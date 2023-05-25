@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import '../models/category.dart';
 import '../models/comment.dart';
 import '../models/reply.dart';
 import '../models/topic.dart';
 import '../models/user.dart';
+import 'package:http/http.dart' as http;
 
 class UserProvider extends ChangeNotifier {
   final List<User> _userList = [];
@@ -37,6 +40,23 @@ class CategoryProvider extends ChangeNotifier {
   late Category _currentCategory;
   Category get currentCategory => _currentCategory;
   List<Category> get categoryList => _categoryList;
+  List<Category> categories = [];
+
+  Future<void> fetchCategories() async {
+    final response =
+        await http.get(Uri.parse('http://127.0.0.1:8000/categories/'));
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      final List<dynamic> topicData = jsonData['categories'];
+
+      categories =
+          topicData.map((topicJson) => Category.fromJson(topicJson)).toList();
+      notifyListeners();
+    } else {
+      throw Exception('Failed to fetch categories');
+    }
+  }
 
   void add(Category category) {
     _categoryList.add(category);
@@ -61,20 +81,34 @@ class CategoryProvider extends ChangeNotifier {
 }
 
 class TopicProvider extends ChangeNotifier {
-  final List<Topic> _topicList = [];
+  List<Topic> _topicList = [];
   bool activeComment = false;
   List<Topic> get topicList => _topicList;
+
+  Future<void> fetchTopics() async {
+    final response = await http.get(Uri.parse('http://127.0.0.1:8000/topics/'));
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      final List<dynamic> topicData = jsonData['topics'];
+
+      _topicList =
+          topicData.map((topicJson) => Topic.fromJson(topicJson)).toList();
+    } else {
+      throw Exception('Failed to fetch topics');
+    }
+  }
 
   void add(Topic topic) {
     _topicList.add(topic);
     notifyListeners();
   }
 
-  // bool toggleHelpstatus(Topic topic) {
-  //   topic.helpStatus = !topic.helpStatus;
-  //   notifyListeners();
-  //   return topic.helpStatus;
-  // }
+  bool toggleHelpstatus(Topic topic) {
+    topic.helpStatus = !topic.helpStatus;
+    notifyListeners();
+    return topic.helpStatus;
+  }
 
   void remove(Topic topic) {
     _topicList.remove(topic);

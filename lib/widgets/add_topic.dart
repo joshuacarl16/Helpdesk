@@ -112,26 +112,30 @@ class _AddTopicDialogState extends State<AddTopicDialog> {
 
                 // for (int i = 0; i < cProvider.categoryList.length; i++) {
                 //   if (_topicCategoryController.text ==
-                //       cProvider.categoryList[i].name) {
+                //       cProvider.categoryList[i].categoryName) {
                 //     final categoryId = cProvider.categoryList[i].id;
                 //     topicId = categoryId != null ? categoryId.toString() : '';
                 //     break;
                 //   }
                 // }
 
-                if (topicName.isNotEmpty) {
-                  final topic = Topic(
-                    categoryName: topicCategoryName,
-                    topicName: topicName,
-                    userId: currentUser.userId,
-                    content: topicContent,
-                    dateCreated: DateTime.now(),
-                    numberOfComments: null,
-                  );
+                if (topicName.isNotEmpty &&
+                    topicCategoryName.isNotEmpty &&
+                    topicContent.isNotEmpty) {
+                  final topic = {
+                    'topicName': topicName,
+                    'content': topicContent,
+                    'categoryName': {
+                      'categoryName': topicCategoryName,
+                    },
+                    'userId': currentUser.userId,
+                    'dateCreated': DateTime.now().toIso8601String(),
+                    'numberOfComments': null,
+                  };
 
                   final response = await http.post(
                     Uri.parse('http://127.0.0.1:8000/add_topic/'),
-                    body: json.encode(topic.toJson()),
+                    body: jsonEncode(topic),
                     headers: {'Content-Type': 'application/json'},
                   );
                   print('Response status code: ${response.statusCode}');

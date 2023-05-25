@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:helpdesk_ipt/models/category.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 import '../provider/provider.dart';
 
@@ -77,7 +80,7 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
               ),
-              onPressed: () {
+              onPressed: () async {
                 final name = _categoryNameController.text;
 
                 if (name.isNotEmpty) {
@@ -85,8 +88,25 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
                     categoryName: name,
                     id: null,
                   );
-                  context.read<CategoryProvider>().add(category);
-                  Navigator.of(context).pop();
+
+                  final response = await http.post(
+                    Uri.parse('http://127.0.0.1:8000/add_category/'),
+                    headers: <String, String>{
+                      'Content-Type': 'application/json; charset=UTF-8',
+                    },
+                    body: jsonEncode(<String, String>{
+                      'categoryName': name,
+                    }),
+                  );
+                  if (response.statusCode == 201) {
+                    final jsonResponse = jsonDecode(response.body);
+                    category.id = jsonResponse['id'];
+                    context.read<CategoryProvider>().fetchCategories();
+                    Navigator.of(context).pop();
+                  } else {
+                    // Handle the error.
+                    print('Failed to add category: ${response.body}');
+                  }
                 }
               },
               child: const Text('Save'),

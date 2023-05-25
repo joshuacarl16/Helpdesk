@@ -1,5 +1,5 @@
 class Category {
-  final int? id;
+  int? id;
   final String categoryName;
 
   Category({required this.id, required this.categoryName});
