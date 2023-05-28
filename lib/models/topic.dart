@@ -1,5 +1,5 @@
 class Topic {
-  final String categoryId;
+  final int categoryId;
   final String userId;
   final String topicName;
   late final bool helpStatus;
@@ -31,7 +31,8 @@ class Topic {
 
   factory Topic.fromJson(Map<String, dynamic> json) {
     return Topic(
-      categoryId: json['categoryId'] ?? 'N/A',
+      categoryId:
+          json['categoryId'] != null ? int.parse(json['categoryId']) : 0,
       userId: json['userId'] ?? 'N/A',
       helpStatus: json['helpStatus'] ?? false,
       dateCreated: json['dateCreated'] != null

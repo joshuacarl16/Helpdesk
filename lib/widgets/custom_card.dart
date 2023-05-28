@@ -206,7 +206,7 @@ class TopicCard extends StatelessWidget {
                           ),
                           TextSpan(
                             text: DateFormat('MM-dd-yyyy HH:mm')
-                                .format(topic.dateCreated),
+                                .format(topic.dateCreated as DateTime),
                             style: TextStyle(
                                 color: Theme.of(context).primaryColor),
                           ),

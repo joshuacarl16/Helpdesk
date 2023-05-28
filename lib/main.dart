@@ -14,7 +14,17 @@ import 'package:provider/provider.dart';
 void main() {
   Provider.debugCheckInvalidValueType = null;
 
-  runApp(const MyApp());
+  final categoryProvider = CategoryProvider();
+
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider<CategoryProvider>.value(value: categoryProvider),
+      ChangeNotifierProvider<TopicProvider>(
+          create: (context) => TopicProvider()),
+      ChangeNotifierProvider<UserProvider>(create: (context) => UserProvider()),
+    ],
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {

@@ -41,6 +41,7 @@ class CategoryProvider extends ChangeNotifier {
   Category get currentCategory => _currentCategory;
   List<Category> get categoryList => _categoryList;
   List<Category> categories = [];
+  List<Category> get categories1 => _categoryList;
 
   Future<void> fetchCategories() async {
     final response =

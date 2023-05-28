@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/category.dart';
 import '../models/topic.dart';
 import '../provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -26,13 +27,13 @@ class AddTopicDialog extends StatefulWidget {
 class _AddTopicDialogState extends State<AddTopicDialog> {
   late final TextEditingController _topicNameController;
   late final TextEditingController _topicContentController;
-  late final TextEditingController _topicCategoryController;
+  Category? selectedCategory;
 
   @override
   void initState() {
     _topicNameController = TextEditingController();
     _topicContentController = TextEditingController();
-    _topicCategoryController = TextEditingController();
+    selectedCategory = null;
     super.initState();
   }
 
@@ -40,7 +41,6 @@ class _AddTopicDialogState extends State<AddTopicDialog> {
   void dispose() {
     _topicNameController.dispose();
     _topicContentController.dispose();
-    _topicCategoryController.dispose();
     super.dispose();
   }
 
@@ -81,10 +81,22 @@ class _AddTopicDialogState extends State<AddTopicDialog> {
           SizedBox(
             height: 5,
           ),
-          TextField(
-            maxLines: 1,
-            controller: _topicCategoryController,
-            decoration: const InputDecoration(
+          DropdownButtonFormField<Category>(
+            value: selectedCategory,
+            onChanged: (Category? newValue) {
+              setState(() {
+                selectedCategory = newValue ?? selectedCategory;
+              });
+            },
+            items: cProvider.categories.map<DropdownMenuItem<Category>>(
+              (Category category) {
+                return DropdownMenuItem<Category>(
+                  value: category,
+                  child: Text(category.categoryName),
+                );
+              },
+            ).toList(),
+            decoration: InputDecoration(
               border: OutlineInputBorder(),
               labelText: 'Category',
             ),
@@ -106,29 +118,22 @@ class _AddTopicDialogState extends State<AddTopicDialog> {
               onPressed: () async {
                 final topicName = _topicNameController.text;
                 final topicContent = _topicContentController.text;
-                final topicCategoryName = _topicCategoryController.text;
+                final categoryId = selectedCategory?.id;
+                final userId = currentUser.userId;
 
-                // String topicId = '';
-
-                // for (int i = 0; i < cProvider.categoryList.length; i++) {
+                //           for (int i = 0; i < cProvider.categoryList.length; i++) {
                 //   if (_topicCategoryController.text ==
                 //       cProvider.categoryList[i].categoryName) {
-                //     final categoryId = cProvider.categoryList[i].id;
-                //     topicId = categoryId != null ? categoryId.toString() : '';
-                //     break;
+                //     categoryId = cProvider.categoryList[i].categoryId;
                 //   }
                 // }
 
-                if (topicName.isNotEmpty &&
-                    topicCategoryName.isNotEmpty &&
-                    topicContent.isNotEmpty) {
+                if (topicName.isNotEmpty && topicContent.isNotEmpty) {
                   final topic = {
                     'topicName': topicName,
                     'content': topicContent,
-                    'categoryName': {
-                      'categoryName': topicCategoryName,
-                    },
-                    'userId': currentUser.userId,
+                    'categoryName': categoryId,
+                    'userId': userId,
                     'dateCreated': DateTime.now().toIso8601String(),
                     'numberOfComments': null,
                   };

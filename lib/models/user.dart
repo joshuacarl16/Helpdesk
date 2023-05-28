@@ -8,13 +8,13 @@ class User {
   String lastName;
   String roles;
 
-  User(
-      {required this.username,
-      required this.password,
-      required this.firstName,
-      required this.lastName,
-      this.roles = 'user'})
-      : userId = const Uuid().v4();
+  User({
+    required this.username,
+    required this.password,
+    required this.firstName,
+    required this.lastName,
+    this.roles = 'user',
+  }) : userId = Uuid().v4();
 
   void promoteToAdmin() {
     roles = 'admin';

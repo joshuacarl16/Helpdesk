@@ -27,15 +27,13 @@ class _RegisterPageState extends State<RegisterPage> {
     String firstName = _firstNameController.text;
     String lastName = _lastNameController.text;
 
-    // Add your validation here
     if (password != confirmPassword) {
       print("Passwords do not match.");
       return;
     }
 
-    // Post data to your backend API
-    var url = 'http://127.0.0.1:8000/register/';
-    var response = await http.post(Uri.parse(url), body: {
+    var response =
+        await http.post(Uri.parse('http://127.0.0.1:8000/register/'), body: {
       'username': username,
       'password': password,
       'password2': confirmPassword,
@@ -46,7 +44,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
     var responseBody = jsonDecode(response.body);
 
-    // You can handle the response from your API here
     if (response.statusCode == 200) {
       print(responseBody);
     } else {
