@@ -1,55 +1,72 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+import 'package:uuid/uuid.dart';
+
+class SignUp extends StatefulWidget {
+  const SignUp({Key? key}) : super(key: key);
 
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  State<SignUp> createState() => _SignUpState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
-  // Declare text editing controllers
+class _SignUpState extends State<SignUp> {
+  final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  final _emailController = TextEditingController();
+  // final _emailController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  String _errorMessage = '';
 
-  Future<void> _registerUser() async {
-    String username = _usernameController.text;
-    String password = _passwordController.text;
-    String confirmPassword = _confirmPasswordController.text;
-    String email = _emailController.text;
-    String firstName = _firstNameController.text;
-    String lastName = _lastNameController.text;
-
-    if (password != confirmPassword) {
-      print("Passwords do not match.");
-      return;
-    }
-
-    var response =
-        await http.post(Uri.parse('http://127.0.0.1:8000/register/'), body: {
-      'username': username,
-      'password': password,
-      'password2': confirmPassword,
-      'email': email,
-      'first_name': firstName,
-      'last_name': lastName,
-    });
-
+  void register(String userId, String username, String password,
+      String firstName, String lastName) async {
+    final response = await http.post(
+      Uri.parse('http://127.0.0.1:8000/register/'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'userId': userId,
+        'username': username,
+        'password': password,
+        'firstname': firstName,
+        'lastname': lastName,
+      }),
+    );
     var responseBody = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 201) {
+      // Updated status code check to 201
       print(responseBody);
+      Navigator.pop(context);
     } else {
-      print(responseBody);
+      setState(() {
+        print(responseBody);
+        _errorMessage = 'Failed to register user';
+      });
     }
   }
+
+  //   var response =
+  //       await http.post(Uri.parse('http://127.0.0.1:8000/register/'), body: {
+  //     'username': username,
+  //     'password': password,
+  //     'password2': confirmPassword,
+  //     'email': email,
+  //     'first_name': firstName,
+  //     'last_name': lastName,
+  //   });
+
+  //   var responseBody = jsonDecode(response.body);
+
+  //   if (response.statusCode == 200) {
+  //     print(responseBody);
+  //   } else {
+  //     print(responseBody);
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -86,23 +103,27 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               obscureText: true,
             ),
-            TextField(
-              controller: _confirmPasswordController,
-              decoration: InputDecoration(
-                labelText: 'Confirm Password',
-              ),
-              obscureText: true,
-            ),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-              ),
-            ),
+            // TextField(
+            //   controller: _emailController,
+            //   decoration: InputDecoration(
+            //     labelText: 'Email',
+            //   ),
+            // ),
             ElevatedButton(
-              child: Text('Register'),
-              onPressed: _registerUser,
-            ),
+                child: Text('Register'),
+                onPressed: () {
+                  // if (_formKey.currentState!.validate()) {
+                  final uuid = Uuid();
+                  final userId = uuid.v4();
+                  register(
+                      userId,
+                      _usernameController.text,
+                      _passwordController.text,
+                      _firstNameController.text,
+                      _lastNameController.text);
+                }
+                // },
+                ),
           ],
         ),
       ),

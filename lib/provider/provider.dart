@@ -9,24 +9,41 @@ import '../models/user.dart';
 import 'package:http/http.dart' as http;
 
 class UserProvider extends ChangeNotifier {
-  final List<User> _userList = [];
-  late User _currentUser =
-      User(username: '', password: '', firstName: '', lastName: '');
-  User get currentUser => _currentUser;
-  List<User> get userList => _userList.where((e) => e.roles == 'user').toList();
-  List<User> get adminList =>
-      _userList.where((e) => e.roles == 'admin').toList();
+  UserProvider() {
+    fetchUsers();
+  }
 
-  void add(User user) {
-    _userList.add(user);
+  List<User?> _userList = [];
+  List<User?> get usersList => _userList;
+
+  User? _user;
+  User? get user => _user;
+
+  void setUser(User user) {
+    _user = user;
     notifyListeners();
   }
 
-  User setCurrentUser(User user) {
-    _currentUser = user;
-    notifyListeners();
-    return _currentUser;
+  Future<void> fetchUsers() async {
+    final response = await http.get(Uri.parse('http://127.0.0.1:8000/users/'));
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      _userList.clear();
+      for (var replyData in jsonData) {
+        final users = User.fromJson(replyData);
+        _userList.add(users);
+      }
+      notifyListeners();
+    } else {
+      throw Exception('Failed to fetch users');
+    }
   }
+  // User setCurrentUser(User user) {
+  //   _currentUser = user;
+  //   notifyListeners();
+  //   return _currentUser;
+  // }
 
   void remove(User user) {
     _userList.remove(user);
@@ -35,13 +52,20 @@ class UserProvider extends ChangeNotifier {
 }
 
 class CategoryProvider extends ChangeNotifier {
+  CategoryProvider() {
+    _currentCategory = Category(
+      categoryId: 'All',
+      categoryName: 'All',
+      userId: '',
+      isClicked: false,
+    );
+    fetchCategories();
+  }
   final List<Category> _categoryList = [];
   bool activeCategory = false;
   late Category _currentCategory;
   Category get currentCategory => _currentCategory;
   List<Category> get categoryList => _categoryList;
-  List<Category> categories = [];
-  List<Category> get categories1 => _categoryList;
 
   Future<void> fetchCategories() async {
     final response =
@@ -49,10 +73,11 @@ class CategoryProvider extends ChangeNotifier {
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);
-      final List<dynamic> topicData = jsonData['categories'];
-
-      categories =
-          topicData.map((topicJson) => Category.fromJson(topicJson)).toList();
+      _categoryList.clear();
+      for (var categoryData in jsonData) {
+        final categories = Category.fromJson(categoryData);
+        _categoryList.add(categories);
+      }
       notifyListeners();
     } else {
       throw Exception('Failed to fetch categories');
@@ -70,8 +95,10 @@ class CategoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setActiveCategoryFalse() {
-    activeCategory = false;
+  void setAllCategory() {
+    _currentCategory =
+        Category(categoryId: 'All', categoryName: 'All', userId: '');
+
     notifyListeners();
   }
 
@@ -85,34 +112,53 @@ class TopicProvider extends ChangeNotifier {
   List<Topic> _topicList = [];
   bool activeComment = false;
   List<Topic> get topicList => _topicList;
+  Topic? _topic;
+  Topic? get topic => _topic;
+  List<Topic> _topics = [];
+  List<Topic> get topics => [..._topics];
 
   Future<void> fetchTopics() async {
     final response = await http.get(Uri.parse('http://127.0.0.1:8000/topics/'));
 
     if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body);
-      final List<dynamic> topicData = jsonData['topics'];
-
-      _topicList =
-          topicData.map((topicJson) => Topic.fromJson(topicJson)).toList();
+      final List<dynamic> jsonData = json.decode(response.body);
+      _topicList.clear();
+      for (var topicData in jsonData) {
+        final topic = Topic.fromJson(topicData);
+        _topicList.add(topic);
+      }
+      notifyListeners();
     } else {
       throw Exception('Failed to fetch topics');
     }
   }
 
-  void add(Topic topic) {
+  addComment(Comment comment) {
+    final topicIndex =
+        _topics.indexWhere((topic) => topic.topicId == comment.topicId);
+    if (topicIndex != -1) {
+      _topics[topicIndex].comments.add(comment);
+      notifyListeners();
+    }
+  }
+
+  setTopic(Topic topic) {
+    _topic = topic;
+    notifyListeners();
+  }
+
+  List<Topic> getFilteredTopics(String categoryId) {
+    if (categoryId == 'All') {
+      return _topicList;
+    } else {
+      return _topicList
+          .where((topic) => topic.categoryId == categoryId)
+          .toList();
+    }
+  }
+
+  addTopic(Topic topic) async {
     _topicList.add(topic);
-    notifyListeners();
-  }
-
-  bool toggleHelpstatus(Topic topic) {
-    topic.helpStatus = !topic.helpStatus;
-    notifyListeners();
-    return topic.helpStatus;
-  }
-
-  void remove(Topic topic) {
-    _topicList.remove(topic);
     notifyListeners();
   }
 }
@@ -120,6 +166,26 @@ class TopicProvider extends ChangeNotifier {
 class CommentProvider extends ChangeNotifier {
   final List<Comment> _commentList = [];
   List<Comment> get commentList => _commentList;
+
+  Comment? _comment;
+  Comment? get comment => _comment;
+
+  Future<void> fetchComments() async {
+    final response =
+        await http.get(Uri.parse('http://127.0.0.1:8000/comments/'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonData = json.decode(response.body);
+      _commentList.clear();
+      for (var commentData in jsonData) {
+        final comment = Comment.fromJson(commentData);
+        _commentList.add(comment);
+      }
+      notifyListeners();
+    } else {
+      throw Exception('Failed to fetch comments');
+    }
+  }
 
   void add(Comment comment) {
     _commentList.add(comment);

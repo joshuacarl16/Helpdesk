@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:helpdesk_ipt/models/category.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 
 import '../provider/provider.dart';
 
@@ -34,14 +35,15 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
 
   @override
   void dispose() {
-    _categoryNameController = TextEditingController();
+    _categoryNameController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final cProvider = Provider.of<CategoryProvider>(context, listen: false);
     final uProvider = Provider.of<UserProvider>(context);
-    final currentUser = uProvider.currentUser;
+    final currentUser = uProvider.user;
 
     return AlertDialog(
       title: Row(
@@ -81,32 +83,25 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
                 backgroundColor: Colors.black,
               ),
               onPressed: () async {
-                final name = _categoryNameController.text;
+                final categoryName = _categoryNameController.text;
 
-                if (name.isNotEmpty) {
+                if (categoryName.isNotEmpty) {
+                  final categoryId = Uuid().v4();
                   final category = Category(
-                    categoryName: name,
-                    id: null,
+                    userId: currentUser!.userId,
+                    categoryId: categoryId,
+                    categoryName: categoryName,
                   );
-
                   final response = await http.post(
                     Uri.parse('http://127.0.0.1:8000/add_category/'),
                     headers: <String, String>{
-                      'Content-Type': 'application/json; charset=UTF-8',
+                      'Content-Type': 'application/json',
                     },
-                    body: jsonEncode(<String, String>{
-                      'categoryName': name,
-                    }),
+                    body: jsonEncode(category.toJson()),
                   );
-                  if (response.statusCode == 201) {
-                    final jsonResponse = jsonDecode(response.body);
-                    category.id = jsonResponse['id'];
-                    context.read<CategoryProvider>().fetchCategories();
-                    Navigator.of(context).pop();
-                  } else {
-                    // Handle the error.
-                    print('Failed to add category: ${response.body}');
-                  }
+                  Navigator.of(context).pop();
+                  context.read<CategoryProvider>().fetchCategories();
+                  print(response.body);
                 }
               },
               child: const Text('Save'),

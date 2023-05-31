@@ -1,46 +1,50 @@
+import 'package:helpdesk_ipt/models/comment.dart';
+
 class Topic {
-  final int categoryId;
-  final String userId;
-  final String topicName;
-  late final bool helpStatus;
-  final String content;
-  final DateTime dateCreated;
-  final int? numberOfComments;
-
+  String topicId;
+  String title;
+  String description;
+  String categoryId;
+  String categoryName;
+  String userId;
+  String created;
+  List<Comment> comments;
   Topic({
-    required this.topicName,
-    required this.content,
+    required this.topicId,
+    required this.title,
+    required this.description,
     required this.categoryId,
+    required this.categoryName,
     required this.userId,
-    this.helpStatus = false,
-    required this.dateCreated,
-    required this.numberOfComments,
-  });
+    required this.created,
+    List<Comment>? comments,
+  }) : comments = comments ?? [];
 
-  Map<String, dynamic> toJson() {
-    return {
-      'categoryId': categoryId,
-      'userId': userId,
-      'topicName': topicName,
-      'content': content,
-      'helpStatus': helpStatus,
-      'dateCreated': dateCreated.toIso8601String(),
-      'numberOfComments': numberOfComments,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'topicId': topicId,
+        'title': title,
+        'description': description,
+        'categoryId': categoryId,
+        'categoryName': categoryName,
+        'userId': userId,
+        'created': created
+      };
 
-  factory Topic.fromJson(Map<String, dynamic> json) {
+  factory Topic.fromJson(Map<String, dynamic> map) {
     return Topic(
-      categoryId:
-          json['categoryId'] != null ? int.parse(json['categoryId']) : 0,
-      userId: json['userId'] ?? 'N/A',
-      helpStatus: json['helpStatus'] ?? false,
-      dateCreated: json['dateCreated'] != null
-          ? DateTime.parse(json['dateCreated'])
-          : DateTime.now(),
-      numberOfComments: json['numberOfComments'] ?? 0,
-      topicName: json['topicName'] ?? 'N/A',
-      content: json['content'] ?? 'N/A',
+      topicId: map['topicId'],
+      title: map['title'],
+      description: map['description'],
+      categoryId: map['categoryId'],
+      categoryName: map['categoryName'] ?? '',
+      userId: map['userId'],
+      created: map['created'],
     );
   }
+
+  @override
+  bool operator ==(covariant Topic other) => topicId == other.topicId;
+
+  @override
+  int get hashCode => topicId.hashCode;
 }

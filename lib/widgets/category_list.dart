@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:helpdesk_ipt/models/category.dart';
 import 'package:helpdesk_ipt/provider/provider.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 
 class CategoryListWidget extends StatefulWidget {
   const CategoryListWidget({Key? key}) : super(key: key);
@@ -28,14 +25,14 @@ class _CategoryListWidgetState extends State<CategoryListWidget> {
   Widget build(BuildContext context) {
     return Consumer<CategoryProvider>(
       builder: (context, categoryProvider, child) {
-        final categoryList = categoryProvider.categories;
+        final categoryList = categoryProvider.categoryList;
         return IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
                 onTap: () {
-                  categoryProvider.setActiveCategoryFalse();
+                  categoryProvider.setAllCategory();
                 },
                 child: Container(
                   width: 100,

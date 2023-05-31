@@ -1,11 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:helpdesk_ipt/models/category.dart';
 import 'package:helpdesk_ipt/models/topic.dart';
 import 'package:helpdesk_ipt/provider/provider.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
-import 'custom_card.dart';
+import 'topic_card.dart';
 
 class TopicListWidget extends StatefulWidget {
   const TopicListWidget({Key? key}) : super(key: key);
@@ -15,35 +13,26 @@ class TopicListWidget extends StatefulWidget {
 }
 
 class _TopicListWidgetState extends State<TopicListWidget> {
-  List<Topic> topics = [];
-
   @override
   void initState() {
     super.initState();
-    fetchTopics();
-  }
-
-  Future<void> fetchTopics() async {
-    final response = await http.get(Uri.parse('http://127.0.0.1:8000/topics/'));
-
-    if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body);
-      final List<dynamic> topicData = jsonData['topics'];
-
-      setState(() {
-        topics =
-            topicData.map((topicJson) => Topic.fromJson(topicJson)).toList();
-      });
-    } else {
-      throw Exception('Failed to fetch topics');
-    }
+    context.read<TopicProvider>().fetchTopics();
   }
 
   @override
   Widget build(BuildContext context) {
-    final topicList = topics;
+    final currentCategory = context.watch<CategoryProvider>().currentCategory;
 
-    return topicList.isEmpty
+    List<Topic> filteredTopics;
+    if (currentCategory.categoryId == 'All') {
+      filteredTopics = context.watch<TopicProvider>().topicList;
+    } else {
+      filteredTopics = context
+          .watch<TopicProvider>()
+          .getFilteredTopics(currentCategory.categoryId);
+    }
+
+    return filteredTopics.isEmpty
         ? const Center(
             child: Text(
               'No entries',
@@ -54,9 +43,9 @@ class _TopicListWidgetState extends State<TopicListWidget> {
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.all(16),
             separatorBuilder: (context, index) => Container(height: 8),
-            itemCount: topicList.length,
+            itemCount: filteredTopics.length,
             itemBuilder: (context, index) {
-              final topic = topicList[index];
+              final topic = filteredTopics[index];
               return TopicCardWidget(topic: topic);
             },
           );

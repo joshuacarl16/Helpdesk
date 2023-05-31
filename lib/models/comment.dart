@@ -1,22 +1,38 @@
-import 'package:uuid/uuid.dart';
-
 class Comment {
-  final String commentId;
-  String topicId;
-  String userId;
-  bool isMostHelpful;
+  String commentId;
   String content;
-  DateTime dateCreated;
-  int replyCount;
-
+  String topicId;
+  bool showReply;
+  String userId;
   Comment({
+    required this.commentId,
     required this.topicId,
     required this.userId,
-    this.content = '',
-    this.isMostHelpful = false,
-    this.replyCount = 0,
-    required this.dateCreated,
-  }) : commentId = const Uuid().v4();
+    required this.content,
+    this.showReply = false,
+  });
+
+  get categoryId => null;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'commentId': commentId,
+      'content': content,
+      'topicId': topicId,
+      'showReply': showReply,
+      'userId': userId,
+    };
+  }
+
+  factory Comment.fromJson(Map<String, dynamic> map) {
+    return Comment(
+      commentId: map['commentId'],
+      content: map['content'],
+      topicId: map['topicId'],
+      showReply: map['showReply'],
+      userId: map['userId'],
+    );
+  }
 
   @override
   bool operator ==(covariant Comment other) => commentId == other.commentId;

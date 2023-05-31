@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/category.dart';
 import '../models/topic.dart';
@@ -27,12 +28,15 @@ class AddTopicDialog extends StatefulWidget {
 class _AddTopicDialogState extends State<AddTopicDialog> {
   late final TextEditingController _topicNameController;
   late final TextEditingController _topicContentController;
+  late final TextEditingController _topicCategoryController;
   Category? selectedCategory;
+  String topicCategory = '';
 
   @override
   void initState() {
     _topicNameController = TextEditingController();
     _topicContentController = TextEditingController();
+    _topicCategoryController = TextEditingController();
     selectedCategory = null;
     super.initState();
   }
@@ -41,6 +45,7 @@ class _AddTopicDialogState extends State<AddTopicDialog> {
   void dispose() {
     _topicNameController.dispose();
     _topicContentController.dispose();
+    _topicCategoryController.dispose();
     super.dispose();
   }
 
@@ -48,7 +53,7 @@ class _AddTopicDialogState extends State<AddTopicDialog> {
   Widget build(BuildContext context) {
     final uProvider = Provider.of<UserProvider>(context);
     final cProvider = Provider.of<CategoryProvider>(context);
-    final currentUser = uProvider.currentUser;
+    final currentUser = uProvider.user;
 
     return AlertDialog(
       title: Row(
@@ -85,10 +90,11 @@ class _AddTopicDialogState extends State<AddTopicDialog> {
             value: selectedCategory,
             onChanged: (Category? newValue) {
               setState(() {
-                selectedCategory = newValue ?? selectedCategory;
+                selectedCategory = newValue;
+                topicCategory = newValue?.categoryName ?? '';
               });
             },
-            items: cProvider.categories.map<DropdownMenuItem<Category>>(
+            items: cProvider.categoryList.map<DropdownMenuItem<Category>>(
               (Category category) {
                 return DropdownMenuItem<Category>(
                   value: category,
@@ -118,42 +124,39 @@ class _AddTopicDialogState extends State<AddTopicDialog> {
               onPressed: () async {
                 final topicName = _topicNameController.text;
                 final topicContent = _topicContentController.text;
-                final categoryId = selectedCategory?.id;
-                final userId = currentUser.userId;
+                final topicCategory = _topicCategoryController.text;
+                String categoryId = "";
 
-                //           for (int i = 0; i < cProvider.categoryList.length; i++) {
-                //   if (_topicCategoryController.text ==
-                //       cProvider.categoryList[i].categoryName) {
-                //     categoryId = cProvider.categoryList[i].categoryId;
-                //   }
-                // }
+                for (int i = 0; i < cProvider.categoryList.length; i++) {
+                  if (selectedCategory == cProvider.categoryList[i]) {
+                    categoryId = cProvider.categoryList[i].categoryId;
+                  }
+                }
 
                 if (topicName.isNotEmpty && topicContent.isNotEmpty) {
-                  final topic = {
-                    'topicName': topicName,
-                    'content': topicContent,
-                    'categoryName': categoryId,
-                    'userId': userId,
-                    'dateCreated': DateTime.now().toIso8601String(),
-                    'numberOfComments': null,
-                  };
+                  final topicId = Uuid().v4();
+                  final topic = Topic(
+                    userId: currentUser!.userId,
+                    topicId: topicId,
+                    title: topicName,
+                    description: topicContent,
+                    categoryId: categoryId,
+                    created: DateTime.now().toIso8601String(),
+                    categoryName: topicCategory,
+                  );
 
                   final response = await http.post(
                     Uri.parse('http://127.0.0.1:8000/add_topic/'),
-                    body: jsonEncode(topic),
-                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode(topic.toJson()),
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json'
+                    },
                   );
+                  context.read<TopicProvider>().addTopic(topic);
                   print('Response status code: ${response.statusCode}');
                   print('Response body: ${response.body}');
-                  if (response.statusCode == 201) {
-                    // Topic saved successfully
-                    final jsonData = json.decode(response.body);
-                    final newTopic = Topic.fromJson(jsonData);
-                    context.read<TopicProvider>().add(newTopic);
-                    Navigator.of(context).pop();
-                  } else {
-                    throw Exception('Failed to save topic');
-                  }
+                  Navigator.of(context).pop();
                 }
               },
               child: const Text('Save'),
