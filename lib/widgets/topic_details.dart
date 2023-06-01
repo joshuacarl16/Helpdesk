@@ -22,16 +22,26 @@ class TopicDetails extends StatefulWidget {
 }
 
 class _TopicDetailsState extends State<TopicDetails> {
+  late Topic topic;
+  late UserProvider uProvider;
+  late CategoryProvider cProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    topic = widget.topic;
+    uProvider = Provider.of<UserProvider>(context, listen: false);
+    cProvider = Provider.of<CategoryProvider>(context, listen: false);
+    final commentProvider =
+        Provider.of<CommentProvider>(context, listen: false);
+    commentProvider.fetchComments();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final topic = widget.topic;
-
     final createdDateTime = DateTime.parse(topic.created);
     final formattedDateTime =
         DateFormat('MM-dd-yyyy HH:mm').format(createdDateTime);
-
-    final uProvider = Provider.of<UserProvider>(context, listen: false);
-    final cProvider = Provider.of<CategoryProvider>(context, listen: false);
 
     final username = context.select<UserProvider, String>((provider) {
       for (int i = 0; i < uProvider.usersList.length; i++) {
@@ -183,6 +193,8 @@ class _TopicDetailsState extends State<TopicDetails> {
 
   Future<void> _displayAddCommentDialog(
       BuildContext context, Comment comment) async {
+    final topicProvider = context.read<TopicProvider>();
+    topicProvider.setTopic(topic);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -254,9 +266,6 @@ class _AddCommentDialogState extends State<AddCommentDialog> {
         content: _commentController.text,
         topicId: currentTopic!.topicId,
       );
-      print(currentTopic);
-      print(currentUser);
-      print(comment);
       final response = await http.post(
         Uri.parse('http://127.0.0.1:8000/add_comment/'),
         headers: <String, String>{
@@ -273,8 +282,6 @@ class _AddCommentDialogState extends State<AddCommentDialog> {
         context.read<CommentProvider>().fetchComments();
         final tProvider = Provider.of<TopicProvider>(context, listen: false);
         tProvider.addComment(newComment);
-
-        Navigator.pop(context);
       }
     }
 
@@ -299,6 +306,7 @@ class _AddCommentDialogState extends State<AddCommentDialog> {
                 ElevatedButton(
                   onPressed: () {
                     _addComment();
+                    Navigator.pop(context);
                   },
                   child: const Text('Save'),
                 ),

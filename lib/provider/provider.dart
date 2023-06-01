@@ -157,6 +157,17 @@ class TopicProvider extends ChangeNotifier {
     }
   }
 
+  deleteTopic(Topic topic) async {
+    final response = await http.delete(
+        Uri.parse('http://127.0.0.1:8000/topics/${topic.topicId}/delete/'));
+    if (response.statusCode == 200) {
+      _topicList.remove(topic);
+      notifyListeners();
+    } else {
+      throw Exception('Failed to delete topic');
+    }
+  }
+
   addTopic(Topic topic) async {
     _topicList.add(topic);
     notifyListeners();
@@ -185,6 +196,11 @@ class CommentProvider extends ChangeNotifier {
     } else {
       throw Exception('Failed to fetch comments');
     }
+  }
+
+  void setComment(Comment comment) {
+    _comment = comment;
+    notifyListeners();
   }
 
   void add(Comment comment) {

@@ -13,8 +13,7 @@ import '../models/user.dart';
 import '../provider/provider.dart';
 
 class CommentCard extends StatelessWidget {
-  const CommentCard({super.key, required this.comment});
-
+  const CommentCard({Key? key, required this.comment}) : super(key: key);
   final Comment comment;
 
   @override
@@ -38,7 +37,7 @@ class CommentCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: PhysicalModel(
         color: Colors.white,
-        shadowColor: const Color(0xFF1B0130),
+        shadowColor: Colors.black,
         child: Container(
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
           margin: const EdgeInsets.symmetric(vertical: 15, horizontal: 8),
@@ -60,54 +59,60 @@ class CommentCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          comment.content.isNotEmpty
-                              ? Padding(
-                                  padding: const EdgeInsets.only(top: 15.0),
-                                  child: Text(
-                                    comment.content,
-                                    style: const TextStyle(
-                                        fontSize: 16,
-                                        color: Color.fromARGB(255, 19, 19, 19)),
-                                  ),
-                                )
-                              : const SizedBox(height: 12),
+                          if (comment.content != null &&
+                              comment.content.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 15.0),
+                              child: Text(
+                                comment.content,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Color.fromARGB(255, 19, 19, 19),
+                                ),
+                              ),
+                            )
+                          else
+                            const SizedBox(height: 12),
                         ],
                       ),
                     ),
                   ),
                 ],
               ),
-              comment.showReply
-                  ? Column(
-                      children: [
-                        // provider.replyList.isNotEmpty
-                        //     ? ReplyListWidget(comment: comment)
-                        // : const SizedBox(),
-                        const Divider(
-                          color: Color.fromARGB(255, 200, 199, 199),
-                          thickness: 2,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 12),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: TextField(
-                              textAlign: TextAlign.start,
-                              autofocus: false,
-                              controller: controller,
-                              style: const TextStyle(
-                                  fontSize: 15, fontWeight: FontWeight.bold),
-                              decoration: const InputDecoration(
-                                labelText: "Reply",
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : const SizedBox(),
-              // Container(
+              if (comment.showReply) ...[
+                // provider.replyList.isNotEmpty
+                //     ? ReplyListWidget(comment: comment)
+                //     : const SizedBox(),
+                const Divider(
+                  color: Color.fromARGB(255, 200, 199, 199),
+                  thickness: 2,
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: TextField(
+                      textAlign: TextAlign.start,
+                      autofocus: false,
+                      controller: controller,
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.bold),
+                      decoration: const InputDecoration(
+                        labelText: "Reply",
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+// Container(
               //   margin: const EdgeInsets.symmetric(vertical: 5),
               //   child: Row(
               //     children: [
@@ -203,10 +208,3 @@ class CommentCard extends StatelessWidget {
               //     ],
               //   ),
               // ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

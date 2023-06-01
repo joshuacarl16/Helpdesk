@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:helpdesk_ipt/models/category.dart';
 import 'package:helpdesk_ipt/models/topic.dart';
 import 'package:helpdesk_ipt/provider/provider.dart';
@@ -46,8 +47,27 @@ class _TopicListWidgetState extends State<TopicListWidget> {
             itemCount: filteredTopics.length,
             itemBuilder: (context, index) {
               final topic = filteredTopics[index];
-              return TopicCardWidget(topic: topic);
+              return Slidable(
+                actionPane: SlidableDrawerActionPane(),
+                actionExtentRatio: 0.25,
+                secondaryActions: [
+                  IconSlideAction(
+                    caption: 'Delete',
+                    color: Colors.red,
+                    icon: Icons.delete,
+                    onTap: () {
+                      _deleteTopic(topic);
+                    },
+                  ),
+                ],
+                child: TopicCardWidget(topic: topic),
+              );
             },
           );
+  }
+
+  void _deleteTopic(Topic topic) {
+    final topicProvider = context.read<TopicProvider>();
+    topicProvider.deleteTopic(topic);
   }
 }
