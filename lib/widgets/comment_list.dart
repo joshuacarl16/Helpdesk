@@ -17,6 +17,10 @@ class CommentListWidget extends StatelessWidget {
         .where((comment) => comment.topicId == topic.topicId)
         .toList();
 
+    Future<void> _refreshComments() async {
+      await cProvider.fetchCommentsByTopicId(topic.topicId);
+    }
+
     return commentsList.isEmpty
         ? Center(
             child: Container(
@@ -27,16 +31,19 @@ class CommentListWidget extends StatelessWidget {
               ),
             ),
           )
-        : ListView.separated(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(6),
-            separatorBuilder: (context, index) => Container(height: 8),
-            itemCount: commentsList.length,
-            itemBuilder: (context, index) {
-              final comment = commentsList[index];
-              return CommentCard(
-                comment: comment,
-              );
-            });
+        : RefreshIndicator(
+            onRefresh: _refreshComments,
+            child: ListView.separated(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.all(6),
+                separatorBuilder: (context, index) => Container(height: 8),
+                itemCount: commentsList.length,
+                itemBuilder: (context, index) {
+                  final comment = commentsList[index];
+                  return CommentCard(
+                    comment: comment,
+                  );
+                }),
+          );
   }
 }

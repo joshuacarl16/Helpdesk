@@ -198,9 +198,22 @@ class CommentProvider extends ChangeNotifier {
     }
   }
 
-  void setComment(Comment comment) {
-    _comment = comment;
-    notifyListeners();
+  Future<void> fetchCommentsByTopicId(String topicId) async {
+    final response = await http.get(
+      Uri.parse('http://127.0.0.1:8000/comments?topicId=$topicId'),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonData = json.decode(response.body);
+      _commentList.clear();
+      for (var commentData in jsonData) {
+        final comment = Comment.fromJson(commentData);
+        _commentList.add(comment);
+      }
+      notifyListeners();
+    } else {
+      throw Exception('Failed to fetch comments');
+    }
   }
 
   void add(Comment comment) {
@@ -216,15 +229,32 @@ class CommentProvider extends ChangeNotifier {
 
 class ReplyProvider extends ChangeNotifier {
   final List<Reply> _replyList = [];
-  List<Reply> get commentList => _replyList;
+  List<Reply> get replyList => _replyList;
 
-  void add(Reply comment) {
-    _replyList.add(comment);
+  Future<void> fetchReplies() async {
+    final response =
+        await http.get(Uri.parse('http://127.0.0.1:8000/replies/'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonData = json.decode(response.body);
+      _replyList.clear();
+      for (var replyData in jsonData) {
+        final reply = Reply.fromJson(replyData);
+        _replyList.add(reply);
+      }
+      notifyListeners();
+    } else {
+      throw Exception('Failed to fetch replies');
+    }
+  }
+
+  void add(Reply reply) {
+    _replyList.add(reply);
     notifyListeners();
   }
 
-  void remove(Reply comment) {
-    _replyList.remove(comment);
+  void remove(Reply reply) {
+    _replyList.remove(reply);
     notifyListeners();
   }
 }

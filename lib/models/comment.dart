@@ -2,15 +2,14 @@ class Comment {
   String commentId;
   String content;
   String topicId;
-  bool showReply;
+  String replies;
   String userId;
-  Comment({
-    required this.commentId,
-    required this.topicId,
-    required this.userId,
-    required this.content,
-    this.showReply = false,
-  });
+  Comment(
+      {required this.commentId,
+      required this.topicId,
+      required this.userId,
+      required this.content,
+      required this.replies});
 
   get categoryId => null;
 
@@ -19,7 +18,7 @@ class Comment {
       'commentId': commentId,
       'content': content,
       'topicId': topicId,
-      'showReply': showReply,
+      'replies': replies,
       'userId': userId,
     };
   }
@@ -29,7 +28,7 @@ class Comment {
       commentId: map['commentId'],
       content: map['content'],
       topicId: map['topicId'],
-      showReply: map['showReply'],
+      replies: map['replies'],
       userId: map['userId'],
     );
   }

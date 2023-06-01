@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:helpdesk_ipt/models/comment.dart';
 import 'package:helpdesk_ipt/models/reply.dart';
+import 'package:helpdesk_ipt/widgets/commentreply.dart';
 // import 'package:helpdesk_ipt/widgets/reply_list.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +19,7 @@ class CommentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final uProvider = context.watch<UserProvider>();
     final provider = context.watch<ReplyProvider>();
     final currentUser = context.select<UserProvider, User?>(
       (provider) => provider.user,
@@ -32,7 +34,25 @@ class CommentCard extends StatelessWidget {
       return null;
     });
 
-    TextEditingController controller = TextEditingController();
+    final username = context.select<UserProvider, String>((provider) {
+      for (int i = 0; i < uProvider.usersList.length; i++) {
+        if (comment.userId == uProvider.usersList[i]?.userId) {
+          return provider.usersList.elementAt(i)!.username;
+        }
+      }
+      return '';
+    });
+
+    // return GestureDetector(
+    //   onTap: () {
+    //     Navigator.push(
+    //       context,
+    //       MaterialPageRoute(
+    //         builder: (context) => CommentReplyPage(comment: comment),
+    //       ),
+    //     );
+    //   },
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: PhysicalModel(
@@ -49,7 +69,7 @@ class CommentCard extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: 12.0),
                     child: Icon(
                       Icons.account_box_outlined,
-                      size: 30,
+                      size: 40,
                     ),
                   ),
                   Expanded(
@@ -59,16 +79,29 @@ class CommentCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (comment.content != null &&
-                              comment.content.isNotEmpty)
+                          if (comment.content.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 15.0),
-                              child: Text(
-                                comment.content,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Color.fromARGB(255, 19, 19, 19),
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    username,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                  SizedBox(height: 6),
+                                  Text(
+                                    comment.content,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
                               ),
                             )
                           else
@@ -79,32 +112,6 @@ class CommentCard extends StatelessWidget {
                   ),
                 ],
               ),
-              if (comment.showReply) ...[
-                // provider.replyList.isNotEmpty
-                //     ? ReplyListWidget(comment: comment)
-                //     : const SizedBox(),
-                const Divider(
-                  color: Color.fromARGB(255, 200, 199, 199),
-                  thickness: 2,
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: TextField(
-                      textAlign: TextAlign.start,
-                      autofocus: false,
-                      controller: controller,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.bold),
-                      decoration: const InputDecoration(
-                        labelText: "Reply",
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),
@@ -112,99 +119,3 @@ class CommentCard extends StatelessWidget {
     );
   }
 }
-// Container(
-              //   margin: const EdgeInsets.symmetric(vertical: 5),
-              //   child: Row(
-              //     children: [
-              //       comment.showReply
-              //           ? Expanded(
-              //               flex: 5,
-              //               child: Padding(
-              //                 padding:
-              //                     const EdgeInsets.symmetric(horizontal: 12),
-              //                 child: ElevatedButton(
-              //                   style: ElevatedButton.styleFrom(
-              //                     elevation: 5,
-              //                     backgroundColor:
-              //                         user?.role == 'admin'
-              //                       ? Colors.blue: Theme.of(context).primaryColor,
-              //                   ),
-              //                   onPressed: () {
-              //                     if (controller.text.isNotEmpty) {
-              //                       final replyId = const Uuid().v4();
-              //                       final reply = Reply(
-              //                         replyId: replyId,
-              //                         commentId: comment.commentId,
-              //                         content: controller.text,
-              //                         userId: currentUser!.userId,
-              //                         username: currentUser.username,
-              //                         dateCreated: DateTime.now().toString(),
-              //                       );
-              //                       Map<String, String> headers = {
-              //                         'Content-type': 'application/json',
-              //                         'Accept': 'application/json',
-              //                       };
-
-              //                       String url = '${Env.urlPrefix}/reply/add';
-              //                       http.post(Uri.parse(url),
-              //                           headers: headers,
-              //                           body: jsonEncode(reply.toJson()));
-              //                       context
-              //                           .read<TopicProvider>()
-              //                           .fetchTopicList();
-              //                       context
-              //                           .read<ReplyProvider>()
-              //                           .fetchReplyList();
-              //                     }
-              //                   },
-              //                   child: const SizedBox(
-              //                     height: 30,
-              //                     width: double.infinity,
-              //                     child: Center(
-              //                       child: Text(
-              //                         "Reply",
-              //                         style: TextStyle(
-              //                             color: Colors.white,
-              //                             fontWeight: FontWeight.bold),
-              //                       ),
-              //                     ),
-              //                   ),
-              //                 ),
-              //               ),
-              //             )
-              //           : const SizedBox(),
-              //       Expanded(
-              //         flex: 5,
-              //         child: Padding(
-              //           padding: const EdgeInsets.symmetric(horizontal: 12),
-              //           child: ElevatedButton(
-              //             onPressed: () {
-              //               context
-              //                   .read<CommentProvider>()
-              //                   .toggleReplies(comment);
-              //             },
-              //             style: ElevatedButton.styleFrom(
-              //               elevation: 5,
-              //               backgroundColor: user?.role == 'admin'
-              //                       ? Colors.blue: Theme.of(context).primaryColor,
-              //             ),
-              //             child: SizedBox(
-              //               height: 30,
-              //               width: double.infinity,
-              //               child: Center(
-              //                 child: Text(
-              //                   comment.showReply
-              //                       ? "Hide Replies"
-              //                       : "Show Replies",
-              //                   style: const TextStyle(
-              //                       color: Colors.white,
-              //                       fontWeight: FontWeight.bold),
-              //                 ),
-              //               ),
-              //             ),
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // ),

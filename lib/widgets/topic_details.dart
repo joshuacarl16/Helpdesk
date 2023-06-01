@@ -25,6 +25,7 @@ class _TopicDetailsState extends State<TopicDetails> {
   late Topic topic;
   late UserProvider uProvider;
   late CategoryProvider cProvider;
+  late CommentProvider commProvider;
 
   @override
   void initState() {
@@ -32,10 +33,17 @@ class _TopicDetailsState extends State<TopicDetails> {
     topic = widget.topic;
     uProvider = Provider.of<UserProvider>(context, listen: false);
     cProvider = Provider.of<CategoryProvider>(context, listen: false);
-    final commentProvider =
-        Provider.of<CommentProvider>(context, listen: false);
-    commentProvider.fetchComments();
+    commProvider = Provider.of<CommentProvider>(context, listen: false);
+    commProvider.fetchCommentsByTopicId(topic.topicId);
   }
+
+  Comment newComment = Comment(
+    commentId: '',
+    topicId: '',
+    userId: '',
+    content: '',
+    replies: '',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -92,88 +100,74 @@ class _TopicDetailsState extends State<TopicDetails> {
                   ),
                 ],
               ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            topic.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 22,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Category: $categoryName',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.blue,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Posted by: $username',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.blue,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Created on: $formattedDateTime',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.blue,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            topic.description,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: ListView(
+              child: Column(children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Slidable(
-                          actionPane: SlidableDrawerActionPane(),
-                          actionExtentRatio: 0.25,
-                          child: Container(
-                            height: 50,
-                            color: Colors.white,
-                            child: Center(),
+                        Text(
+                          topic.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
                           ),
-                          secondaryActions: <Widget>[
-                            IconSlideAction(
-                              caption: 'Delete',
-                              color: Colors.red,
-                              icon: Icons.delete,
-                              onTap: () {},
-                            ),
-                          ],
                         ),
-                        CommentCard(
-                          comment: Comment(
-                            commentId: '',
-                            topicId: '',
-                            userId: '',
-                            content: '',
+                        const SizedBox(height: 8),
+                        Text(
+                          'Category: ${categoryName.toUpperCase()}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.blue,
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Posted by: $username',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Created on: $formattedDateTime',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          topic.description,
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: commProvider.commentList
+                        .where((comment) => comment.topicId == topic.topicId)
+                        .length,
+                    itemBuilder: (context, index) {
+                      List<Comment> matchingComments = commProvider.commentList
+                          .where((comment) => comment.topicId == topic.topicId)
+                          .toList();
+
+                      if (index < matchingComments.length) {
+                        Comment comment = matchingComments[index];
+                        return CommentCard(comment: comment);
+                      } else {
+                        return SizedBox();
+                      }
+                    },
+                  ),
+                ),
+              ]),
             ),
           ),
         ),
@@ -182,7 +176,12 @@ class _TopicDetailsState extends State<TopicDetails> {
         onPressed: () {
           _displayAddCommentDialog(
             context,
-            Comment(commentId: '', topicId: '', userId: '', content: ''),
+            Comment(
+                commentId: '',
+                topicId: '',
+                userId: '',
+                content: '',
+                replies: ''),
           );
         },
         backgroundColor: Colors.black,
@@ -200,7 +199,9 @@ class _TopicDetailsState extends State<TopicDetails> {
       builder: (BuildContext context) {
         return AddCommentDialog(comment: comment);
       },
-    );
+    ).then((value) {
+      commProvider.fetchCommentsByTopicId(topic.topicId);
+    });
   }
 }
 
@@ -265,6 +266,7 @@ class _AddCommentDialogState extends State<AddCommentDialog> {
         commentId: commentId,
         content: _commentController.text,
         topicId: currentTopic!.topicId,
+        replies: '',
       );
       final response = await http.post(
         Uri.parse('http://127.0.0.1:8000/add_comment/'),
@@ -278,10 +280,16 @@ class _AddCommentDialogState extends State<AddCommentDialog> {
       if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         final newComment = Comment.fromJson(responseData);
-        context.read<TopicProvider>().fetchTopics();
-        context.read<CommentProvider>().fetchComments();
-        final tProvider = Provider.of<TopicProvider>(context, listen: false);
-        tProvider.addComment(newComment);
+        context.read<CommentProvider>().add(newComment);
+        // final tProvider = Provider.of<TopicProvider>(context, listen: false);
+        // tProvider.addComment(newComment);
+        context
+            .read<CommentProvider>()
+            .fetchCommentsByTopicId(currentTopic.topicId);
+
+        setState(() {
+          widget.comment.content = newComment.content;
+        });
       }
     }
 
@@ -304,6 +312,10 @@ class _AddCommentDialogState extends State<AddCommentDialog> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.black),
+                  ),
                   onPressed: () {
                     _addComment();
                     Navigator.pop(context);
@@ -311,6 +323,10 @@ class _AddCommentDialogState extends State<AddCommentDialog> {
                   child: const Text('Save'),
                 ),
                 ElevatedButton(
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.black),
+                  ),
                   onPressed: () {
                     Navigator.pop(context);
                   },

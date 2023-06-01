@@ -53,7 +53,7 @@ class TopicCard extends StatelessWidget {
             return provider.usersList.elementAt(i)!.username;
           }
         }
-        return 'Deleted User';
+        return 'Unknown User';
       },
     );
     final cProvider = Provider.of<CategoryProvider>(context, listen: false);
@@ -146,7 +146,7 @@ class TopicCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Category: $categoryName',
+                      'Category: ${categoryName.toUpperCase()}',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 14,
